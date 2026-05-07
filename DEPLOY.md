@@ -33,3 +33,8 @@ Chaque push produira une URL de preview accessible hors local.
 3. Renseigner les variables d'environnement (`DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`).
 4. Cliquer sur **Deploy**.
 5. Utiliser l'URL Vercel générée pour tester hors local.
+
+
+## Sécurité Next.js (Vercel)
+- Si Vercel affiche *"Vulnerable version of Next.js detected"*, mettez à jour `next` vers une version corrigée (ici `16.0.7`).
+- Re-déployez ensuite le projet depuis Vercel (ou poussez un nouveau commit).
