@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+}
+
+enum QuarterStatus {
+  DU
+  PAYE
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(ADMIN)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  receipts Receipt[] @relation("ReceiptCreatedBy")
+  audits   AuditLog[]
+}
+
+model Tenant {
+  id                             String   @id @default(uuid())
+  fullName                       String
+  rentalAddress                  String
+  leaseStartDate                 DateTime
+  referenceRentAmountCents       Int
+  quarterlyChargesCents          Int
+  currentYear                    Int
+  currentQuarter                 Int
+  rentAdjustmentQuarter          Int
+  irlReferenceYear               Int
+  irlReferenceQuarter            Int
+  chargesRegularizationQuarter   Int
+  propertyTaxIntegrationQuarter  Int
+  securityDepositCents           Int
+  securityDepositAdjustmentCents Int?
+  active                         Boolean  @default(true)
+  createdAt                      DateTime @default(now())
+  updatedAt                      DateTime @updatedAt
+
+  quarterCharges TenantQuarterCharge[]
+  receipts       Receipt[]
+}
+
+model Quarter {
+  id        String   @id @default(uuid())
+  year      Int
+  quarter   Int
+  startDate DateTime
+  endDate   DateTime
+
+  charges  TenantQuarterCharge[]
+  receipts Receipt[]
+
+  @@unique([year, quarter])
+}
+
+model TenantQuarterCharge {
+  id                         String        @id @default(uuid())
+  tenantId                   String
+  quarterId                  String
+  baseRentCents              Int
+  chargesCents               Int
+  irlAdjustmentCents         Int
+  propertyTaxCents           Int @default(0)
+  chargesRegularizationCents Int @default(0)
+  totalDueCents              Int
+  status                     QuarterStatus @default(DU)
+  paidAt                     DateTime?
+  createdAt                  DateTime      @default(now())
+  updatedAt                  DateTime      @updatedAt
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  quarter Quarter @relation(fields: [quarterId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, quarterId])
+}
+
+model Receipt {
+  id               String   @id @default(uuid())
+  tenantId         String
+  quarterId        String
+  issueDate        DateTime
+  periodStart      DateTime
+  periodEnd        DateTime
+  rentAmountCents  Int
+  chargesAmountCents Int
+  totalAmountCents Int
+  pdfStorageKey    String
+  pdfSha256        String
+  version          Int      @default(1)
+  createdById      String
+  createdAt        DateTime @default(now())
+
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  quarter   Quarter @relation(fields: [quarterId], references: [id], onDelete: Cascade)
+  createdBy User   @relation("ReceiptCreatedBy", fields: [createdById], references: [id])
+
+  @@index([tenantId, quarterId])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorUserId String
+  action     String
+  entityType String
+  entityId   String
+  beforeJson Json?
+  afterJson  Json?
+  createdAt  DateTime @default(now())
+
+  actor User @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+
+  @@index([entityType, entityId])
+}
