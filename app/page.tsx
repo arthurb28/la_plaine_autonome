@@ -22,6 +22,7 @@ export default function DashboardPage() {
       <p>Total HT cumulé sur la période: <strong>{formatEuro(totalPeriod)}</strong></p>
       <p>Charges provisionnelles: <strong>{formatEuro(7000)}</strong> / trimestre</p>
       <p>Régularisations: T2 2025 = {formatEuro(14977.27)}, T2 2026 = {formatEuro(10148.54)}</p>
+      <p>Taxe foncière: T4 = {formatEuro(117940.82)}</p>
     </main>
   );
 }
